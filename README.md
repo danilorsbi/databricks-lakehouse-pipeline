@@ -8,11 +8,20 @@ Production-grade Lakehouse pipeline built with Databricks, Delta Lake, and Medal
 
 \## Architecture
 
-\- Bronze layer for raw ingestion
+\- Lakehouse Architecture(docs/images/lakehouse_pipeline.png)
 
-\- Silver layer for cleansing, deduplication, quarantine, and MERGE
+## Medallion Architecture
 
-\- Gold layer for analytics-ready tables
+This project implements the Medallion Architecture commonly used in Databricks Lakehouse environments.
+
+### Bronze Layer
+Responsible for ingesting raw data from source systems into Delta tables with minimal transformation.
+
+### Silver Layer
+Applies data cleaning, deduplication, and quality rules to create reliable datasets.
+
+### Gold Layer
+Provides business-ready aggregated datasets optimized for analytics and BI tools.
 
 
 
