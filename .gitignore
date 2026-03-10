@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter / Databricks temp
+.ipynb_checkpoints/
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Secrets / credentials
+secrets/
+credentials/
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.bak
