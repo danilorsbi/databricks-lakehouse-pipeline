@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-repo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Validar estrutura mínima
+        run: |
+          test -f README.md
+          test -d notebooks
+
+      - name: Listar arquivos
+        run: |
+          find . -maxdepth 3 -type f | sort
