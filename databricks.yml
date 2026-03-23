@@ -1,12 +1,15 @@
 bundle:
   name: databricks-lakehouse-pipeline
 
-workspace:
-  host: https://adb-<dbc-ebbaed51-488e.cloud.databricks.com>.azuredatabricks.net
+targets:
+  dev:
+    default: true
+    workspace:
+      host: https://dbc-ebbaed51-488e.cloud.databricks.com
 
 resources:
   jobs:
-    pipeline-job:
+    lakehouse_pipeline_job:
       name: lakehouse-pipeline-job
 
       tasks:

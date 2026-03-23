@@ -1,24 +1,21 @@
-name: CI
+name: CI/CD
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  validate-repo:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do repositório
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validar estrutura mínima
+      - name: Install Databricks CLI
         run: |
-          test -f README.md
-          test -d notebooks
+          pip install databricks-cli
 
-      - name: Listar arquivos
+      - name: Deploy (simples)
         run: |
-          find . -maxdepth 3 -type f | sort
+          echo "Simulação de deploy"
