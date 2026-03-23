@@ -15,7 +15,7 @@ resources:
       tasks:
         - task_key: bronze
           notebook_task:
-            notebook_path: ./notebooks/01_bronze_ingest
+            notebook_path: ./notebooks/01_bronze_ingest.ipynb
 
         - task_key: silver
           depends_on:
