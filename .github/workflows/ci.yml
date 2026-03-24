@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  validate-and-deploy:
+  validate-and-deploy-dev:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,21 +18,21 @@ jobs:
         uses: databricks/setup-cli@main
 
       - name: Validate bundle
-        run: databricks bundle validate
+        run: databricks bundle validate -t dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      - name: Deploy bundle
+      - name: Deploy bundle to dev
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: databricks bundle deploy
+        run: databricks bundle deploy -t dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      - name: Run job
+      - name: Run dev job
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: databricks bundle run lakehouse_pipeline_job
+        run: databricks bundle run -t dev lakehouse_pipeline_job
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
