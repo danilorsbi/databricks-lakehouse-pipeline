@@ -8,7 +8,6 @@ targets:
     workspace:
       host: https://dbc-ebbaed51-488e.cloud.databricks.com
       root_path: /Workspace/Users/cakanilo@gmail.com/.bundle/${bundle.name}/${bundle.target}
-
   prod:
     mode: production
     workspace:
@@ -19,20 +18,78 @@ resources:
   jobs:
     lakehouse_pipeline_job:
       name: lakehouse-pipeline-job-${bundle.target}
-
       tasks:
-        - task_key: bronze
-          notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest.ipynb
 
-        - task_key: silver
-          depends_on:
-            - task_key: bronze
+        # ===== BRONZE (6 tasks em paralelo) =====
+        - task_key: bronze_covid_19
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform.ipynb
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_covid_19
 
-        - task_key: gold
-          depends_on:
-            - task_key: silver
+        - task_key: bronze_estabelecimentos
           notebook_task:
-            notebook_path: ./notebooks/gold/03_gold_aggregate.ipynb
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_estabelecimentos_saude_goias
+
+        - task_key: bronze_faixa_hetaria
+          notebook_task:
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_faixa_hetaria_padre_bernardo
+
+        - task_key: bronze_local_votacao
+          notebook_task:
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_Local_votacao_secao
+
+        - task_key: bronze_socio_demografico
+          notebook_task:
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_socio_demografico_ibge
+
+        - task_key: bronze_votacao_secao
+          notebook_task:
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_votacao_secao_2024_GO
+
+        # ===== SILVER (6 tasks em paralelo) =====
+        - task_key: silver_covid_19
+          depends_on:
+            - task_key: bronze_covid_19
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_covid_19
+
+        - task_key: silver_estabelecimentos
+          depends_on:
+            - task_key: bronze_estabelecimentos
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_estabelecimentos_saude_go
+
+        - task_key: silver_faixa_hetaria
+          depends_on:
+            - task_key: bronze_faixa_hetaria
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_faixa_hetaria_padre_bernardo_22
+
+        - task_key: silver_local_votacao
+          depends_on:
+            - task_key: bronze_local_votacao
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_local_votacao_secao
+
+        - task_key: silver_socio_demografico
+          depends_on:
+            - task_key: bronze_socio_demografico
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_socio_demografico_ibge
+
+        - task_key: silver_votacao_secao
+          depends_on:
+            - task_key: bronze_votacao_secao
+          notebook_task:
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_votacao_secao_2024_GO
+
+        # ===== GOLD (depende de todas as Silvers) =====
+        - task_key: gold_aggregate
+          depends_on:
+            - task_key: silver_covid_19
+            - task_key: silver_estabelecimentos
+            - task_key: silver_faixa_hetaria
+            - task_key: silver_local_votacao
+            - task_key: silver_socio_demografico
+            - task_key: silver_votacao_secao
+          notebook_task:
+            notebook_path: ./notebooks/gold/02_gold_aggregate_projeto_politicos_joins
