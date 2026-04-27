@@ -16,6 +16,10 @@ targets:
 
 resources:
   jobs:
+
+    # =========================================================
+    # JOB 1: Pipeline de Politicos (existente - sem alteracao)
+    # =========================================================
     lakehouse_pipeline_job:
       name: lakehouse-pipeline-job-${bundle.target}
       tasks:
@@ -93,3 +97,39 @@ resources:
             - task_key: silver_votacao_secao
           notebook_task:
             notebook_path: ./notebooks/gold/02_gold_aggregate_projeto_politicos_joins
+
+    # =========================================================
+    # JOB 2: Pipeline de Apostas Reviews (NOVO - isolado)
+    # =========================================================
+    # Pre-requisito: o JSON deve estar no Volume antes do job rodar.
+    # No Free Edition, a coleta da API roda no PC (00_api_extract.py).
+    # Schedule diario configurado mas pausado por padrao - ative
+    # quando automatizar a coleta ou faca runs manuais via UI.
+    apostas_reviews_pipeline_job:
+      name: apostas-reviews-pipeline-job-${bundle.target}
+
+      schedule:
+        quartz_cron_expression: "0 0 7 * * ?"
+        timezone_id: America/Sao_Paulo
+        pause_status: PAUSED
+
+      tasks:
+
+        # ===== BRONZE =====
+        - task_key: bronze_apostas_reviews
+          notebook_task:
+            notebook_path: ./notebooks/bronze/apostas_reviews/01_bronze_ingest
+
+        # ===== SILVER (depende da Bronze) =====
+        - task_key: silver_apostas_reviews
+          depends_on:
+            - task_key: bronze_apostas_reviews
+          notebook_task:
+            notebook_path: ./notebooks/silver/apostas_reviews/02_silver_transform
+
+        # ===== GOLD (depende da Silver) =====
+        - task_key: gold_apostas_reviews
+          depends_on:
+            - task_key: silver_apostas_reviews
+          notebook_task:
+            notebook_path: ./notebooks/gold/apostas_reviews/03_gold_aggregate
