@@ -133,3 +133,48 @@ resources:
             - task_key: silver_apostas_reviews
           notebook_task:
             notebook_path: ./notebooks/gold/apostas_reviews/03_gold_aggregate
+            
+    # =========================================================
+    # JOB 3: Pipeline de Beneficiarios ANS (BMG - desafio tecnico)
+    # =========================================================
+    bmg_beneficiarios_ans_pipeline_job:
+      name: bmg-beneficiarios-ans-pipeline-job-${bundle.target}
+
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: America/Sao_Paulo
+        pause_status: UNPAUSED
+
+      tasks:
+
+        # ===== BRONZE =====
+        - task_key: bronze_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/bronze/ans/01_broze_ingest_ans
+
+        # ===== SILVER (depende da Bronze) =====
+        - task_key: silver_beneficiarios_ans
+          depends_on:
+            - task_key: bronze_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/silver/ans/01_silver__transform_ans
+
+        # ===== GOLD (3 tasks em paralelo, todas dependem so da Silver) =====
+        - task_key: gold_top_operadoras_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_operadores_ans
+
+        - task_key: gold_faixa_etaria_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_faixa_etaria_ans
+
+        - task_key: gold_beneficiarios_municipio_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_beneficiarios_municipio_ans
+
