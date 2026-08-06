@@ -27,64 +27,64 @@ resources:
         # ===== BRONZE (6 tasks em paralelo) =====
         - task_key: bronze_covid_19
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_covid_19
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_covid_19.ipynb
 
         - task_key: bronze_estabelecimentos
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_estabelecimentos_saude_goias
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_estabelecimentos_saude_goias.ipynb
 
         - task_key: bronze_faixa_hetaria
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_faixa_hetaria_padre_bernardo
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_faixa_hetaria_padre_bernardo.ipynb
 
         - task_key: bronze_local_votacao
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_Local_votacao_secao
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_Local_votacao_secao.ipynb
 
         - task_key: bronze_socio_demografico
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_socio_demografico_ibge
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_socio_demografico_ibge.ipynb
 
         - task_key: bronze_votacao_secao
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_votacao_secao_2024_GO
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_votacao_secao_2024_GO.ipynb
 
         # ===== SILVER (6 tasks em paralelo) =====
         - task_key: silver_covid_19
           depends_on:
             - task_key: bronze_covid_19
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_covid_19
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_covid_19.ipynb
 
         - task_key: silver_estabelecimentos
           depends_on:
             - task_key: bronze_estabelecimentos
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_estabelecimentos_saude_go
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_estabelecimentos_saude_go.ipynb
 
         - task_key: silver_faixa_hetaria
           depends_on:
             - task_key: bronze_faixa_hetaria
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_faixa_hetaria_padre_bernardo_22
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_faixa_hetaria_padre_bernardo_22.ipynb
 
         - task_key: silver_local_votacao
           depends_on:
             - task_key: bronze_local_votacao
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_local_votacao_secao
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_local_votacao_secao.ipynb
 
         - task_key: silver_socio_demografico
           depends_on:
             - task_key: bronze_socio_demografico
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_socio_demografico_ibge
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_socio_demografico_ibge.ipynb
 
         - task_key: silver_votacao_secao
           depends_on:
             - task_key: bronze_votacao_secao
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_votacao_secao_2024_GO
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_votacao_secao_2024_GO.ipynb
 
         # ===== GOLD (depende de todas as Silvers) =====
         - task_key: gold_aggregate
@@ -96,15 +96,11 @@ resources:
             - task_key: silver_socio_demografico
             - task_key: silver_votacao_secao
           notebook_task:
-            notebook_path: ./notebooks/gold/02_gold_aggregate_projeto_politicos_joins
+            notebook_path: ./notebooks/gold/02_gold_aggregate_projeto_politicos_joins.ipynb
 
     # =========================================================
     # JOB 2: Pipeline de Apostas Reviews (NOVO - isolado)
     # =========================================================
-    # Pre-requisito: o JSON deve estar no Volume antes do job rodar.
-    # No Free Edition, a coleta da API roda no PC (00_api_extract.py).
-    # Schedule diario configurado mas pausado por padrao - ative
-    # quando automatizar a coleta ou faca runs manuais via UI.
     apostas_reviews_pipeline_job:
       name: apostas-reviews-pipeline-job-${bundle.target}
 
@@ -118,18 +114,62 @@ resources:
         # ===== BRONZE =====
         - task_key: bronze_apostas_reviews
           notebook_task:
-            notebook_path: ./notebooks/bronze/apostas_reviews/01_bronze_ingest
+            notebook_path: ./notebooks/bronze/apostas_reviews/01_bronze_ingest.py
 
         # ===== SILVER (depende da Bronze) =====
         - task_key: silver_apostas_reviews
           depends_on:
             - task_key: bronze_apostas_reviews
           notebook_task:
-            notebook_path: ./notebooks/silver/apostas_reviews/02_silver_transform
+            notebook_path: ./notebooks/silver/apostas_reviews/02_silver_transform.py
 
         # ===== GOLD (depende da Silver) =====
         - task_key: gold_apostas_reviews
           depends_on:
             - task_key: silver_apostas_reviews
           notebook_task:
-            notebook_path: ./notebooks/gold/apostas_reviews/03_gold_aggregate
+            notebook_path: ./notebooks/gold/apostas_reviews/03_gold_aggregate.py
+
+    # =========================================================
+    # JOB 3: Pipeline de Beneficiarios ANS (BMG - desafio tecnico)
+    # =========================================================
+    bmg_beneficiarios_ans_pipeline_job:
+      name: bmg-beneficiarios-ans-pipeline-job-${bundle.target}
+
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: America/Sao_Paulo
+        pause_status: UNPAUSED
+
+      tasks:
+
+        # ===== BRONZE =====
+        - task_key: bronze_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/bronze/ans/01_broze_ingest_ans.ipynb
+
+        # ===== SILVER (depende da Bronze) =====
+        - task_key: silver_beneficiarios_ans
+          depends_on:
+            - task_key: bronze_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/silver/ans/01_silver__transform_ans.ipynb
+
+        # ===== GOLD (3 tasks em paralelo, todas dependem so da Silver) =====
+        - task_key: gold_top_operadoras_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_operadores_ans.ipynb
+
+        - task_key: gold_faixa_etaria_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_faixa_etaria_ans.ipynb
+
+        - task_key: gold_beneficiarios_municipio_ans
+          depends_on:
+            - task_key: silver_beneficiarios_ans
+          notebook_task:
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_beneficiarios_municipio_ans.ipynb
