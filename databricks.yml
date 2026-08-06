@@ -150,30 +150,30 @@ resources:
         # ===== BRONZE =====
         - task_key: bronze_beneficiarios_ans
           notebook_task:
-            notebook_path: ./notebooks/bronze/test_ans_bmg/01_broze_ingest_ans.ipynb
+            notebook_path: ./notebooks/bronze/ans/01_broze_ingest_ans.ipynb
 
         # ===== SILVER (depende da Bronze) =====
         - task_key: silver_beneficiarios_ans
           depends_on:
             - task_key: bronze_beneficiarios_ans
           notebook_task:
-            notebook_path: ./notebooks/silver/test_ans_bmg/01_silver__transform_ans.ipynb
+            notebook_path: ./notebooks/silver/ans/01_silver__transform_ans.ipynb
 
         # ===== GOLD (3 tasks em paralelo, todas dependem so da Silver) =====
         - task_key: gold_top_operadoras_ans
           depends_on:
             - task_key: silver_beneficiarios_ans
           notebook_task:
-            notebook_path: ./notebooks/gold/test_ans_bmg/01_gold_agregate_top_operadores_ans.ipynb
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_operadores_ans.ipynb
 
         - task_key: gold_faixa_etaria_ans
           depends_on:
             - task_key: silver_beneficiarios_ans
           notebook_task:
-            notebook_path: ./notebooks/gold/test_ans_bmg/01_gold_agregate_top_faixa_etaria_ans.ipynb
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_top_faixa_etaria_ans.ipynb
 
         - task_key: gold_beneficiarios_municipio_ans
           depends_on:
             - task_key: silver_beneficiarios_ans
           notebook_task:
-            notebook_path: ./notebooks/gold/test_ans_bmg/01_gold_agregate_beneficiarios_municipio_ans.ipynb
+            notebook_path: ./notebooks/gold/ans/01_gold_agregate_beneficiarios_municipio_ans.ipynb
