@@ -27,64 +27,64 @@ resources:
         # ===== BRONZE (6 tasks em paralelo) =====
         - task_key: bronze_covid_19
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_covid_19.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_covid_19.ipynb
 
         - task_key: bronze_estabelecimentos
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_estabelecimentos_saude_goias.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_estabelecimentos_saude_goias.ipynb
 
         - task_key: bronze_faixa_hetaria
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_faixa_hetaria_padre_bernardo.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_faixa_hetaria_padre_bernardo.ipynb
 
         - task_key: bronze_local_votacao
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_Local_votacao_secao.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_Local_votacao_secao.ipynb
 
         - task_key: bronze_socio_demografico
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_socio_demografico_ibge.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_socio_demografico_ibge.ipynb
 
         - task_key: bronze_votacao_secao
           notebook_task:
-            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_votacao_secao_2024_GO.py
+            notebook_path: ./notebooks/bronze/01_bronze_ingest_projeto_politicos_votacao_secao_2024_GO.ipynb
 
         # ===== SILVER (6 tasks em paralelo) =====
         - task_key: silver_covid_19
           depends_on:
             - task_key: bronze_covid_19
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_covid_19.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_covid_19.ipynb
 
         - task_key: silver_estabelecimentos
           depends_on:
             - task_key: bronze_estabelecimentos
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_estabelecimentos_saude_go.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_estabelecimentos_saude_go.ipynb
 
         - task_key: silver_faixa_hetaria
           depends_on:
             - task_key: bronze_faixa_hetaria
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_faixa_hetaria_padre_bernardo_22.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_faixa_hetaria_padre_bernardo_22.ipynb
 
         - task_key: silver_local_votacao
           depends_on:
             - task_key: bronze_local_votacao
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_local_votacao_secao.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_local_votacao_secao.ipynb
 
         - task_key: silver_socio_demografico
           depends_on:
             - task_key: bronze_socio_demografico
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_socio_demografico_ibge.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_socio_demografico_ibge.ipynb
 
         - task_key: silver_votacao_secao
           depends_on:
             - task_key: bronze_votacao_secao
           notebook_task:
-            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_votacao_secao_2024_GO.py
+            notebook_path: ./notebooks/silver/02_silver_transform_projeto_politicos_votacao_secao_2024_GO.ipynb
 
         # ===== GOLD (depende de todas as Silvers) =====
         - task_key: gold_aggregate
@@ -101,10 +101,6 @@ resources:
     # =========================================================
     # JOB 2: Pipeline de Apostas Reviews (NOVO - isolado)
     # =========================================================
-    # Pre-requisito: o JSON deve estar no Volume antes do job rodar.
-    # No Free Edition, a coleta da API roda no PC (00_api_extract.py).
-    # Schedule diario configurado mas pausado por padrao - ative
-    # quando automatizar a coleta ou faca runs manuais via UI.
     apostas_reviews_pipeline_job:
       name: apostas-reviews-pipeline-job-${bundle.target}
 
@@ -133,7 +129,7 @@ resources:
             - task_key: silver_apostas_reviews
           notebook_task:
             notebook_path: ./notebooks/gold/apostas_reviews/03_gold_aggregate.py
-            
+
     # =========================================================
     # JOB 3: Pipeline de Beneficiarios ANS (BMG - desafio tecnico)
     # =========================================================
