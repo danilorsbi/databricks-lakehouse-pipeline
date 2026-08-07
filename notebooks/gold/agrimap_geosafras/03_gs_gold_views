@@ -1,0 +1,168 @@
+# =============================================================
+#  GEO SAFRAS · 03_gs_gold_views.py  v2.0
+#  Recria as views Gold com usuario_id e agronomo_outro
+#  Databricks · catalog: workspace · schema: gs_gold
+# =============================================================
+
+GOLD   = "workspace.gs_gold"
+SILVER = "workspace.gs_silver"
+
+print("=" * 60)
+print("GEO SAFRAS · Gold Views v2.0")
+print("=" * 60)
+
+# =============================================================
+#  VIEW 1 · vw_analise_tableau
+#  Análise de solo + camadas para Tableau
+#  Filtrar por usuario_id no Tableau para isolamento por usuário
+# =============================================================
+print("\n[1/3] Recriando vw_analise_tableau...")
+
+spark.sql(f"""
+CREATE OR REPLACE VIEW {GOLD}.vw_analise_tableau AS
+SELECT
+  u.id                          AS usuario_id,
+  u.nome_completo               AS usuario_nome,
+  f.id                          AS fazenda_id,
+  f.nome                        AS fazenda,
+  f.municipio,
+  f.estado,
+  t.id                          AS talhao_id,
+  t.nome                        AS talhao,
+  t.area_ha,
+  a.id                          AS analise_id,
+  a.data_coleta,
+  a.laboratorio,
+  a.extrator_p,
+  a.agronomo,
+  a.agronomo_outro,
+  a.status,
+  a.observacoes,
+  c.profundidade,
+  -- Acidez
+  c.ph_cacl2,  c.ph_h2o,  c.h_al,  c.al_toxico,  c.v_pct,  c.m_pct,
+  -- Macronutrientes primários
+  c.n_mg,  c.p_mg,  c.k_mg,
+  -- Macronutrientes secundários
+  c.ca_cmol,  c.mg_cmol,  c.s_mg,  c.sb_cmol,
+  -- Micronutrientes
+  c.b_mg,  c.zn_mg,  c.cu_mg,  c.fe_mg,  c.mn_mg,
+  -- Físicos e CTC
+  c.mo_g,  c.ctc_total,  c.ctc_efetiva,
+  c.argila_pct,  c.areia_pct,  c.silte_pct
+FROM {SILVER}.analise_solo           a
+JOIN {SILVER}.talhao                 t  ON t.id = a.talhao_id
+JOIN {SILVER}.fazenda                f  ON f.id = t.fazenda_id
+JOIN {SILVER}.usuario                u  ON u.id = a.usuario_id
+JOIN {SILVER}.analise_solo_camada    c  ON c.analise_id = a.id
+WHERE a.status IN ('enviado','processado')
+""")
+print("  ✓ vw_analise_tableau")
+
+
+# =============================================================
+#  VIEW 2 · vw_ajuste_doses_tableau
+#  Ajuste de doses por cultura + totais por talhão
+# =============================================================
+print("\n[2/3] Recriando vw_ajuste_doses_tableau...")
+
+spark.sql(f"""
+CREATE OR REPLACE VIEW {GOLD}.vw_ajuste_doses_tableau AS
+SELECT
+  u.id                              AS usuario_id,
+  u.nome_completo                   AS usuario_nome,
+  f.nome                            AS fazenda,
+  t.nome                            AS talhao,
+  t.area_ha,
+  a.data_coleta,
+  a.extrator_p,
+  d.safra,
+  d.cultura,
+  -- Percentuais ajustados
+  d.pct_sementes,  d.pct_n,  d.pct_p2o5,  d.pct_k2o,
+  d.pct_calcario,  d.pct_gesso,  d.pct_enxofre,
+  -- Doses por hectare
+  d.dose_sementes_kg,  d.dose_n_kg,  d.dose_p2o5_kg,  d.dose_k2o_kg,
+  d.dose_calcario_tha, d.dose_gesso_tha,  d.dose_enxofre_kg,
+  -- Totais pelo talhão
+  ROUND(d.dose_sementes_kg   * t.area_ha, 2) AS total_sementes_kg,
+  ROUND(d.dose_n_kg          * t.area_ha, 2) AS total_n_kg,
+  ROUND(d.dose_p2o5_kg       * t.area_ha, 2) AS total_p2o5_kg,
+  ROUND(d.dose_k2o_kg        * t.area_ha, 2) AS total_k2o_kg,
+  ROUND(d.dose_calcario_tha  * t.area_ha, 2) AS total_calcario_t,
+  ROUND(d.dose_gesso_tha     * t.area_ha, 2) AS total_gesso_t,
+  ROUND(d.dose_enxofre_kg    * t.area_ha, 2) AS total_enxofre_kg,
+  d.agronomo,
+  d.created_at                      AS data_ajuste
+FROM {SILVER}.ajuste_dose            d
+JOIN {SILVER}.analise_solo           a  ON a.id = d.analise_id
+JOIN {SILVER}.talhao                 t  ON t.id = d.talhao_id
+JOIN {SILVER}.fazenda                f  ON f.id = t.fazenda_id
+JOIN {SILVER}.usuario                u  ON u.id = d.usuario_id
+""")
+print("  ✓ vw_ajuste_doses_tableau")
+
+
+# =============================================================
+#  VIEW 3 · vw_resumo_talhao
+#  Resumo agronômico por talhão — camada 0-20cm
+#  com interpretações de V%, pH, P, K
+# =============================================================
+print("\n[3/3] Recriando vw_resumo_talhao...")
+
+spark.sql(f"""
+CREATE OR REPLACE VIEW {GOLD}.vw_resumo_talhao AS
+SELECT
+  u.id                                  AS usuario_id,
+  u.nome_completo                       AS usuario_nome,
+  f.nome                                AS fazenda,
+  t.nome                                AS talhao,
+  t.area_ha,
+  a.data_coleta,
+  a.laboratorio,
+  a.agronomo,
+  a.agronomo_outro,
+  -- Principais indicadores 0-20cm
+  c.v_pct,
+  c.ph_cacl2,
+  c.p_mg,
+  c.k_mg,
+  c.mo_g,
+  c.ctc_total,
+  -- Interpretações agronômicas
+  CASE
+    WHEN c.v_pct >= 70 THEN 'Alto'
+    WHEN c.v_pct >= 50 THEN 'Médio'
+    ELSE 'Baixo — calagem recomendada'
+  END AS interpretacao_v_pct,
+  CASE
+    WHEN c.ph_cacl2 >= 6.0 THEN 'Adequado'
+    WHEN c.ph_cacl2 >= 5.5 THEN 'Ligeiramente ácido'
+    WHEN c.ph_cacl2 >= 5.0 THEN 'Ácido'
+    ELSE 'Muito ácido'
+  END AS interpretacao_ph,
+  CASE
+    WHEN c.p_mg >= 25 THEN 'Alto'
+    WHEN c.p_mg >= 12 THEN 'Médio'
+    ELSE 'Baixo'
+  END AS interpretacao_p,
+  CASE
+    WHEN c.k_mg >= 150 THEN 'Alto'
+    WHEN c.k_mg >= 80  THEN 'Médio'
+    ELSE 'Baixo'
+  END AS interpretacao_k
+FROM {SILVER}.analise_solo           a
+JOIN {SILVER}.talhao                 t  ON t.id = a.talhao_id
+JOIN {SILVER}.fazenda                f  ON f.id = t.fazenda_id
+JOIN {SILVER}.usuario                u  ON u.id = a.usuario_id
+JOIN {SILVER}.analise_solo_camada    c  ON c.analise_id = a.id
+                                       AND c.profundidade = '0-20'
+WHERE a.status IN ('enviado','processado')
+""")
+print("  ✓ vw_resumo_talhao")
+
+
+print("\n" + "=" * 60)
+print("Gold Views v2.0 criadas com sucesso.")
+print("Todas incluem usuario_id para filtro no Tableau.")
+print("=" * 60)
