@@ -281,12 +281,49 @@ spark.table("workspace.drs_silver.reviews_apps_staging").printSchema()
 
 # COMMAND ----------
 
+# # Exportando a tabela workspace.drs_silver.reviews_apps para CSV
+
+# output_path = "/Volumes/workspace/pipeline_estudo/raw_files/outputs/"
+
+# df_export = spark.table("workspace.drs_silver.reviews_apps")
+
+# df_export.write \
+#     .mode("overwrite") \
+#     .option("header", "true") \
+#     .csv(output_path)
+
+# COMMAND ----------
+
 df = spark.sql("""
-SELECT * 
-FROM workspace.drs_silver.reviews_apps
+SELECT
+    sum(CASE
+        WHEN mentions_withdrawal = TRUE THEN 1 ELSE 0 END) AS mentions_withdrawal,
+    sum(CASE
+        WHEN mentions_deposit = TRUE THEN 1 ELSE 0 END) AS mentions_deposit,
+    sum(CASE
+        WHEN mentions_bonus = TRUE THEN 1 ELSE 0 END) AS mentions_bonus,
+    sum(CASE
+        WHEN mentions_support = TRUE THEN 1 ELSE 0 END) AS mentions_support,
+    sum(CASE
+        WHEN mentions_bug = TRUE THEN 1 ELSE 0 END) AS mentions_bug
+    FROM workspace.drs_silver.reviews_apps
+WHERE review_date >= '2026-04-01' and review_date <= '2026-04-30'
+
 """)
 
 display(df)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT 
+# MAGIC   date_format(date_trunc('DAY', dt_review), 'yyyy-MM-dd') as Periodo,
+# MAGIC   sum(rating) as total_nota,
+# MAGIC   sum(likes) as total_likes  
+# MAGIC FROM workspace.drs_silver.reviews_apps
+# MAGIC WHERE review_date >= '2026-04-01' and review_date <= '2026-04-30'
+# MAGIC group by Periodo
+# MAGIC order by Periodo desc
 
 # COMMAND ----------
 
@@ -328,6 +365,11 @@ FROM workspace.drs_silver.reviews_apps
 """)
 
 display(dq)
+
+# COMMAND ----------
+
+spark.table("workspace.drs_silver.reviews_apps").printSchema()
+
 
 # COMMAND ----------
 
